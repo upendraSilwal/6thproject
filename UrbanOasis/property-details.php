@@ -470,6 +470,10 @@ $imageUrl = getPropertyImageUrl($property);
                                 <span>Days listed:</span>
                                 <strong><?php echo $propertyStats['days_listed']; ?> days</strong>
                             </div>
+                            <div class="stat-row d-flex justify-content-between">
+                                <span>AI Predicted Price:</span>
+                                <strong id="predicted-price"></strong>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1262,6 +1266,40 @@ $imageUrl = getPropertyImageUrl($property);
             window.propertyGallery.closeLightbox();
         }
     }
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const propertyId = <?php echo json_encode($propertyId); ?>;
+    const propertyData = <?php echo json_encode([
+        'property_type' => $property['property_type'],
+        'listing_type' => $property['listing_type'],
+        'city' => $property['city'],
+        'bedrooms' => $property['bedrooms'],
+        'bathrooms' => $property['bathrooms'],
+        'area_sqft' => $property['area_sqft'],
+        'furnished' => $property['furnished'],
+        'features' => array_values($features), // Send features as a simple array of names
+    ]); ?>;
+
+    fetch('ajax/predict_price.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(propertyData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        const predictedPriceElement = document.getElementById('predicted-price');
+        if (data.status === 'success' && data.predicted_price !== null) {
+            predictedPriceElement.textContent = `Rs. ${parseFloat(data.predicted_price).toLocaleString('en-NP')}`;
+        } else {
+            predictedPriceElement.textContent = 'N/A'; // Or an error message
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching predicted price:', error);
+        document.getElementById('predicted-price').textContent = 'Error';
+    });
+});
 </script>
 
 <!-- Inquiry Modal -->
